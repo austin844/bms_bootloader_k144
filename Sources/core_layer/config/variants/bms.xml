@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  River FW SDK - NXP S32K144/146 peripheral configuration (BMS).
+  Single source of truth for per-product driver config. Consumed at BUILD TIME by
+  core_layer/config/tools/gen_config.py, which emits core_layer/config/generated_code/<product>/inc/
+  rr_hw_cfg.h. There is NO runtime XML parse on the MCU. Edit values here, re-run the
+  generator, re-gate. Values mirror the BMS source repo (rx_03_ry_01_bms_nxp/Generated_Code).
+-->
+<product name="bms" mcu="S32K144" cpu="S32K144HFT0VLLT">
+
+	<!-- Clock tree (shared VCU/BMS default). -->
+	<clock src="SIRC" src_hz="8000000" firc_hz="48000000" pll="SPLL"
+	       divcore="2" divbus="2" divslow="4"/>
+
+	<!-- LPSPI: 2 instances. inst0 via PAL (8-bit); inst1 via raw LPSPI driver
+	     (lpspiCom1) carries the wide 48-bit AFE frame, 2nd-edge phase. -->
+	<spi present="1" src_clk_hz="8000000" timeout_ms="100">
+		<instance id="0" hw="0" baud="4000000" frame_bits="8"/>
+		<instance id="1" hw="1" baud="4000000" frame_bits="48" phase="2ND_EDGE"/>
+	</spi>
+
+	<!-- LPI2C: master role, addressed target 50, 100 kHz. -->
+	<i2c present="1" timeout_ms="50" slave_addr="50" baud="100000"/>
+
+	<!-- ADC: ADC0 (5 ch) + ADC1 (3 ch), 12-bit, DIVIDE_1, 10 result-buffer sets. -->
+	<adc present="1" resolution="12BIT" clock_divide="1" voltage_ref="VREF"
+	     avg_depth="10" max_channels="16">
+		<group id="0" channels="5"/>
+		<group id="1" channels="3"/>
+	</adc>
+
+	<!-- FTM timer: FTM0 7ch continuous + FTM1 2ch oneshot. -->
+	<timer present="1" channel_max="8">
+		<instance hw="0" channels="7" mode="CONTINUOUS"/>
+		<instance hw="1" channels="2" mode="ONESHOT"/>
+	</timer>
+
+	<!-- FlexCAN: can_1 at half bitrate (preDivider 19). -->
+	<can present="1">
+		<instance id="0" prop_seg="7" pseg1="4" pseg2="1" pre_divider="9"  rjw="1"/>
+		<instance id="1" prop_seg="7" pseg1="4" pseg2="1" pre_divider="19" rjw="1"/>
+	</can>
+
+	<!-- Watchdog: internal WDOG + external EWM. -->
+	<watchdog present="1">
+		<instance type="internal"     timeout="1024" clk="LPO" window_percent="50"/>
+		<instance type="external_ewm" timeout="254"/>
+	</watchdog>
+
+	<!-- CRC: HW CRC-32 (0x1021 poly, 0xFFFF seed) + SW CRC-8 (SMBus PEC). -->
+	<crc present="1">
+		<engine type="hw" width="32" poly="0x1021" seed="0xFFFF"/>
+		<engine type="sw" width="8"  poly="0x07"   seed="0x00"/>
+	</crc>
+
+	<!-- PWM PAL: period 4000. -->
+	<pwm present="1" period="4000"/>
+
+	<!-- RTC: not used on BMS. -->
+	<rtc present="0"/>
+
+</product>
