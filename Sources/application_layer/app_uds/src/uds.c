@@ -233,7 +233,7 @@ static U8 _0x22_ReadDataByIdentifier(UDSReq_t *r)
         }
         case 0xF18BU: /* Active application bank: 0 = Bank A, 1 = Bank B */
         {
-            r->send_buf[r->send_len++] = Read_ActiveSlotForApplication();
+            // r->send_buf[r->send_len++] = Read_ActiveSlotForApplication();
             break;
         }
         default:
@@ -448,9 +448,9 @@ static U8 _0x31_RoutineControl(UDSReq_t *r)
 			}
 
 			/* Call the helper to safely validate the other bank and swap */
-			if (!boot_metadata_swap_active_bank()) {
-				return NegativeResponse(r, kConditionsNotCorrect); /* Fails if empty or corrupted */
-			}
+			// if (!boot_metadata_swap_active_bank()) {
+			// 	return NegativeResponse(r, kConditionsNotCorrect); /* Fails if empty or corrupted */
+			// }
 		}
 		break;
 	}
@@ -670,9 +670,9 @@ static U8 _0x37_RequestTransferExit(UDSReq_t *r)
     boot_metadata_t meta;
     if (boot_metadata_read(&meta)) {
         U8 slot = uds_srvr.is_active_slot & 0x01U;
-        meta.fw_crc32[slot]   = finalized_crc;
-        meta.fw_size[slot]    = (U32)uds_srvr.xferByteCounter;
-        meta.bank_valid[slot] = 0U;   /* validated by BL on next boot */
+        meta.fw_crc32   = finalized_crc;
+        meta.fw_size    = (U32)uds_srvr.xferByteCounter;
+        // meta.bank_valid[slot] = 0U;   /* validated by BL on next boot */
         boot_metadata_write(&meta);
     }
 
@@ -680,7 +680,7 @@ static U8 _0x37_RequestTransferExit(UDSReq_t *r)
     r->send_len = UDS_0X37_RESP_BASE_LEN;
 
     ResetTransfer();
-    PersistBootState(ETX_NORMAL_BOOT, uds_srvr.is_active_slot);
+    PersistBootState(ETX_NORMAL_BOOT);
     return kPositiveResponse;
 }
 
@@ -769,7 +769,7 @@ static U8 _0x35_RequestUpload(UDSReq_t *r)
 
     /* Restrict upload to application flash banks and data flash only */
     bool in_app = (upload_addr >= ETX_APP_BASE_ADDRESS) &&
-                  ((upload_addr + upload_size) <= ETX_APP_BANK_B_END);
+                  ((upload_addr + upload_size) <= ETX_APP_BANK_A_END);
     bool in_df  = (upload_addr >= ETX_APP_DATA_ADDR) &&
                   ((upload_addr + upload_size) <= (ETX_APP_DATA_ADDR + ETX_MAX_DATA_SIZE_ERASE));
     if (!in_app && !in_df) {
@@ -1049,8 +1049,8 @@ void UDS_Bootloader_state_machine( void )
       uds_srvr.sessionType = kDefaultSession;
       if(Read_Reboot_Reason() == ETX_REPROG_REQ_FROM_UDS)
       {
-        uds_srvr.is_active_slot = Read_ActiveSlotForApplication();
-        PersistBootState(ETX_REPROG_REQ_FROM_UDS,uds_srvr.is_active_slot);
+        uds_srvr.is_active_slot = 0;
+        PersistBootState(ETX_REPROG_REQ_FROM_UDS);
         SystemSoftwareReset();
       }
       return;

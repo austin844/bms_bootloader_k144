@@ -32,7 +32,7 @@
 #include "wdg_pal.h"	/* S32 SDK WDG PAL: WDG_Init / WDG_Refresh / WDG_SetTimeout / WDG_Deinit / WDG_ClearIntFlag */
 
 /* Configuration Layer Includes -------------------------------------------------------------------------------------------------*/
-#include "core_layer/config/generated_code/vcu/inc/rr_hw_cfg.h"	/* Consolidated build-time hardware config: RR_WDOG_INTERNAL_TIMEOUT */
+#include "core_layer/config/generated_code/bms/inc/rr_hw_cfg.h"	/* Consolidated build-time hardware config: RR_WDOG_INTERNAL_TIMEOUT */
 
 /* Application Layer Includes ---------------------------------------------------------------------------------------------------*/
 

@@ -1,10 +1,10 @@
 /**
  * @file boot_metadata.c
  * @author divyansh
- * @brief 
+ * @brief  Single-Bank Boot Metadata Management for S32K144
  * @date 23-Jul-2026
  * 
- * @copyright Copyright (c) River Moblity Pvt Ltd. All Rights Reserved 2026
+ * @copyright Copyright (c) River Mobility Pvt Ltd. All Rights Reserved 2026
  * 
  */
 
@@ -63,7 +63,7 @@ U32 crc32_compute(const U8 *data, U32 len)
 static U32 metadata_struct_crc(const boot_metadata_t *m)
 {
     /* Cover every field except crc_self, which is the last U32 in the struct.
-     * sizeof(boot_metadata_t) - sizeof(U32) equals offsetof(�, crc_self)
+     * sizeof(boot_metadata_t) - sizeof(U32) equals offsetof(…, crc_self)
      * because the struct is naturally aligned and crc_self is the last member. */
     return crc32_compute((const U8 *)m,
                          (U32)(sizeof(boot_metadata_t) - sizeof(U32)));
@@ -98,16 +98,16 @@ BOOL boot_metadata_write(const boot_metadata_t *in)
 
     /* Erase the code-flash sector that holds the struct, then write it. */
     if (service_iflash_erase(IFLASH_KIND_PFLASH,
-                         ETX_METADATA_CF_ADDR,
-                         ETX_METADATA_CF_SIZE) != COM_HDR_RET_OK)
+                             ETX_METADATA_CF_ADDR,
+                             ETX_METADATA_CF_SIZE) != COM_HDR_RET_OK)
     {
         return false;
     }
 
     return (service_iflash_program(IFLASH_KIND_PFLASH,
-                               ETX_METADATA_CF_ADDR,
-                               (const U8 *)&tmp,
-                               (U32)sizeof(boot_metadata_t)) == COM_HDR_RET_OK);
+                                   ETX_METADATA_CF_ADDR,
+                                   (const U8 *)&tmp,
+                                   (U32)sizeof(boot_metadata_t)) == COM_HDR_RET_OK);
 }
 
 void boot_metadata_init(void)
@@ -118,12 +118,11 @@ void boot_metadata_init(void)
         memset(&m, 0, sizeof(m));
         m.magic          = BOOT_METADATA_MAGIC;
         m.boot_reason    = ETX_NORMAL_BOOT;
-        m.active_bank    = 0U;
 
         /*
          * Default secret: must be provisioned per unit in production via a
          * manufacturing tool writing to ETX_METADATA_CF_ADDR before first boot.
-         * This fallback value is deliberately non-trivial but NOT secret � replace
+         * This fallback value is deliberately non-trivial but NOT secret — replace
          * with a unique value per device for production builds.
          */
         m.stored_secret  = 0xC3A5691EUL;
@@ -134,7 +133,7 @@ void boot_metadata_init(void)
 /* ---------------------------------------------------------------------------
  * uds.c helpers
  * --------------------------------------------------------------------------- */
-void PersistBootState(uint32_t boot_reason, uint8_t active_slot)
+void PersistBootState(uint32_t boot_reason)
 {
     boot_metadata_t m;
     if (!boot_metadata_read(&m)) {
@@ -143,7 +142,6 @@ void PersistBootState(uint32_t boot_reason, uint8_t active_slot)
         m.stored_secret = 0xC3A5691EUL;
     }
     m.boot_reason    = boot_reason;
-    m.active_bank    = active_slot & 0x01U;
     m.update_pending = 1U;
     boot_metadata_write(&m);
 }
@@ -155,15 +153,6 @@ U32 Read_Reboot_Reason(void)
         return ETX_NORMAL_BOOT;
     }
     return m.boot_reason;
-}
-
-U8 Read_ActiveSlotForApplication(void)
-{
-    boot_metadata_t m;
-    if (!boot_metadata_read(&m)) {
-        return 0U;
-    }
-    return m.active_bank & 0x01U;
 }
 
 /* ---------------------------------------------------------------------------
@@ -192,13 +181,8 @@ BOOL EraseFlashMemory(U32 address, U32 size)
 
 S32 check_AddressRangeValid(U32 address)
 {
-    /* Validation for Bank A */
+    /* Validation for the Single Application Bank */
     if ((address >= ETX_APP_BASE_ADDRESS) && (address < ETX_APP_BANK_A_END)) {
-        return 1;
-    }
-
-    /* Validation for Bank B */
-    if ((address >= ETX_APP_BANK_B_ADDRESS) && (address < ETX_APP_BANK_B_END)) {
         return 1;
     }
 
@@ -206,32 +190,32 @@ S32 check_AddressRangeValid(U32 address)
 }
 
 
-BOOL verify_bank_crc(U8 bank, const boot_metadata_t *m)
+BOOL verify_app_crc(const boot_metadata_t *m)
 {
-    U32 base = (bank == 0U) ? ETX_APP_BASE_ADDRESS : ETX_APP_BANK_B_ADDRESS;
-    U32 size = m->fw_size[bank];
+    U32 base = ETX_APP_BASE_ADDRESS;
+    U32 size = m->fw_size; /* Assumes metadata struct is updated to remove arrays */
 
     if (size == 0U || size > ETX_APP_BANK_SIZE) {
         return false;
     }
 
     U32 computed = crc32_compute((const U8 *)base, size);
-    return (computed == m->fw_crc32[bank]);
+    return (computed == m->fw_crc32);
 }
 
-void jump_to_bank(U8 bank)
+void jump_to_app(void)
 {
-    U32 app_base = (bank == 0U) ? ETX_APP_BASE_ADDRESS : ETX_APP_BANK_B_ADDRESS;
+    U32 app_base = ETX_APP_BASE_ADDRESS;
     const U32 *vtor = (const U32 *)app_base;
 
     U32 sp           = vtor[0];
     U32 reset_addr   = vtor[1];
 
     /* 
-     * S32K146 SRAM Boundaries (128 KB total):
-     * 0x1FFE0000 - 0x2000FFFF 
+     * S32K144 SRAM Boundaries (64 KB total):
+     * 0x1FFF8000 - 0x20007000
      */
-    if (!(sp >= 0x1FFE0000UL && sp <= 0x2000FFFFUL))
+    if (!(sp >= 0x1FFF8000UL && sp <= 0x20007000UL))
     {
         return;  /* Invalid Stack Pointer — do not jump */
     }
@@ -243,60 +227,37 @@ void jump_to_bank(U8 bank)
     INT_SYS_DisableIRQGlobal();
 
     /* Update the Vector Table Offset Register (VTOR) */
-	S32_SCB->VTOR = app_base;
+    S32_SCB->VTOR = app_base;
 
-	/* Set the Main Stack Pointer (MSP) */
-	/* Using CMSIS standard function: */
-	__asm volatile ("MSR msp, %0" : : "r" (sp) : );
+    /* Set the Main Stack Pointer (MSP) */
+    /* Using CMSIS standard function: */
+    __asm volatile ("MSR msp, %0" : : "r" (sp) : );
 
-	/* Cast the reset address to a function pointer and jump */
-	void (*app_reset_handler)(void) = (void (*)(void))reset_addr;
-	app_reset_handler();
+    /* Cast the reset address to a function pointer and jump */
+    void (*app_reset_handler)(void) = (void (*)(void))reset_addr;
+    app_reset_handler();
 
     while (1) {}
 }
 
-BOOL try_boot_bank(U8 bank, boot_metadata_t *m)
+BOOL try_boot_app(boot_metadata_t *m)
 {
-    srv_watchdog_refresh();
+    // srv_watchdog_refresh();
 
-    if (!verify_bank_crc(bank, m)) {
-        m->bank_valid[bank] = 0U;
+    if (!verify_app_crc(m)) {
+        m->app_valid = 0U; /* Assumes metadata struct is updated to remove arrays */
         return false;
     }
 
     m->boot_fail_count++;
-    m->bank_valid[bank] = 1U;
+    m->app_valid = 1U;
     boot_metadata_write(m);
 
-    srv_watchdog_refresh();
-    jump_to_bank(bank);
+    // srv_watchdog_refresh();
+    jump_to_app();
 
-    m->bank_valid[bank] = 0U;
+    m->app_valid = 0U;
     return false;
-}
-
-BOOL boot_metadata_swap_active_bank(void)
-{
-    boot_metadata_t meta;
-    
-    /* Read the current metadata */
-    if (!boot_metadata_read(&meta)) {
-        return false;
-    }
-
-    /* Determine the inactive (target) bank by XORing the current bank */
-    U8 target_bank = (meta.active_bank & 0x01U) ^ 0x01U;
-
-    /* Verify the target bank (this existing function checks both size and CRC32) */
-    if (!verify_bank_crc(target_bank, &meta)) {
-        return false; 
-    }
-
-    /* Target bank is valid. Swap the active bank and save to flash */
-    PersistBootState(ETX_NORMAL_BOOT, target_bank);
-    
-    return true;
 }
 
 /* Private Function Definition --------------------------------------------------------------------------------------------------*/

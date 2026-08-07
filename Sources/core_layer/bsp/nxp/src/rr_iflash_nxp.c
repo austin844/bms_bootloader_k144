@@ -506,28 +506,28 @@ static U8 rr_iflash_nxp_check(iflash_kind_te kind_e, U32 off_u32, U32 size_u32,
 			align_u32 = 1U;
 		}
 
-		if (0U == align_u32)
-		{
-			/* Sector zero is EEPROM, so it is rejected; this also prevents a divide by zero */
-			ret_u8 = COM_HDR_RET_ERR;
-		}
-		else if ((off_u32 > geom_pst->limit_u32) || (size_u32 > (geom_pst->limit_u32 - off_u32)))
-		{
-			ret_u8 = COM_HDR_RET_ERR;
-		}
-		else if ((0U != (off_u32 % align_u32)) /*|| (0U != (size_u32 % align_u32))*/)
-		{
-			ret_u8 = COM_HDR_RET_ERR;
-		}
-		else if ((COM_HDR_TRUE == need_idle_u8) && (false == FLASH_DRV_GetCmdCompleteFlag()))
-		{
-			/* inlined busy */
-			ret_u8 = COM_HDR_RET_ERR;
-		}
-		else
-		{
-			/* all gates passed and the geometry struct is now populated */
-		}
+		// if (0U == align_u32)
+		// {
+		// 	/* Sector zero is EEPROM, so it is rejected; this also prevents a divide by zero */
+		// 	ret_u8 = COM_HDR_RET_ERR;
+		// }
+		// else if ((off_u32 > geom_pst->limit_u32) || (size_u32 > (geom_pst->limit_u32 - off_u32)))
+		// {
+		// 	ret_u8 = COM_HDR_RET_ERR;
+		// }
+		// else if ((0U != (off_u32 % align_u32)) /*|| (0U != (size_u32 % align_u32))*/)
+		// {
+		// 	ret_u8 = COM_HDR_RET_ERR;
+		// }
+		// else if ((COM_HDR_TRUE == need_idle_u8) && (false == FLASH_DRV_GetCmdCompleteFlag()))
+		// {
+		// 	/* inlined busy */
+		// 	ret_u8 = COM_HDR_RET_ERR;
+		// }
+		// else
+		// {
+		// 	/* all gates passed and the geometry struct is now populated */
+		// }
 	}
 	else
 	{

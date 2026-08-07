@@ -31,7 +31,7 @@
 #endif /* STM32 / NXP_S32K144_146 / RENESAS */
 
 /* Configuration Layer Includes -----------------------------------------------------------------------------------------------*/
-#include "core_layer/config/generated_code/vcu/inc/rr_hw_cfg.h"	/* Consolidated build-time hardware config for this product (gen_config.py) */
+#include "core_layer/config/generated_code/bms/inc/rr_hw_cfg.h"	/* Consolidated build-time hardware config for this product (gen_config.py) */
 
 /* Application Layer Includes -----------------------------------------------------------------------------------------------*/
 

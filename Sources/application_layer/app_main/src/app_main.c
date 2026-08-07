@@ -101,10 +101,10 @@ void app_main_v(void)
     INT_SYS_SetPriority(CAN0_ORed_16_31_MB_IRQn, 2U);
 
     /* Initialize watchdog */
-    if(srv_watchdog_init() != 0U)
-    {
-    	peripheral_init_error_handler(PERIPH_ID_WDT);
-    }
+    // if(srv_watchdog_init() != 0U)
+    // {
+    // 	peripheral_init_error_handler(PERIPH_ID_WDT);
+    // }
 
     /* Initialize Core Internal Flash Hardware */
     if(service_iflash_init() != 0U)
@@ -112,7 +112,7 @@ void app_main_v(void)
         peripheral_init_error_handler(PERIPH_ID_FLASH);
     }
 
-    srv_watchdog_refresh();
+    // srv_watchdog_refresh();
 
     /* --- Boot metadata -----------------------------------------------------
      * Validate the data-flash record; writes safe defaults on first boot or
@@ -126,11 +126,11 @@ void app_main_v(void)
         stay_in_bl = true;
     }
 
-    /* First-time boot: no firmware written to either bank yet */
-    if (!stay_in_bl && (m.fw_size[0] == 0U) && (m.fw_size[1] == 0U))
-    {
-        stay_in_bl = true;
-    }
+    // /* First-time boot: no firmware written to either bank yet */
+    // if (!stay_in_bl && (m.fw_size[0] == 0U) && (m.fw_size[1] == 0U))
+    // {
+    //     stay_in_bl = true;
+    // }
 
     /* --- Boot decision ------------------------------------------------------
      * 1. Try the active bank.
@@ -140,29 +140,32 @@ void app_main_v(void)
      * ---------------------------------------------------------------------- */
     if (!stay_in_bl)
     {
-        U8 primary  = m.active_bank & 0x01U;
-        U8 fallback = (U8)(1U - primary);
+        // U8 primary  = m.active_bank & 0x01U;
+        // U8 fallback = (U8)(1U - primary);
 
         /* Try primary bank */
         if (m.boot_fail_count < BOOT_FAIL_COUNT_MAX)
         {
-            (void)try_boot_bank(primary, &m);
+            // (void)try_boot_bank(primary, &m);
+
+            try_boot_app(&m);
             /* Returns only if CRC or vector check failed — never on success */
         }
-
-        srv_watchdog_refresh();
-
+        
+        // srv_watchdog_refresh();
+        
         /* Try fallback bank */
         if (boot_metadata_read(&m))
         {
             m.boot_fail_count = 0U;
-            (void)try_boot_bank(fallback, &m);
+            // (void)try_boot_bank(fallback, &m);
+            try_boot_app(&m);
         }
 
         /* Both banks rejected — reset metadata to Bank A for next recovery */
         if (boot_metadata_read(&m))
         {
-            m.active_bank     = 0U;
+//            m.active_bank     = 0U;
             m.boot_fail_count = 0U;
             boot_metadata_write(&m);
         }
@@ -207,7 +210,7 @@ static void run_bootloader_loop(void)
     	UDS_Bootloader_state_machine();
 
     	/* Refresh watchdog */
-    	srv_watchdog_refresh();
+    	// srv_watchdog_refresh();
     }
 
 }
@@ -224,12 +227,12 @@ static void HeartbeatLedStep(void)
 
     if (onTime > 0U)
     {
-        PINS_DRV_SetPins(PTD, ((U32) 1U << 24));
+        PINS_DRV_SetPins(PTE, ((U32) 1U << 16));
         DWT_DelayUs(onTime);
     }
     if (offTime > 0U)
     {
-        PINS_DRV_ClearPins(PTD, ((U32) 1U << 24));
+        PINS_DRV_ClearPins(PTE, ((U32) 1U << 16));
         DWT_DelayUs(offTime);
     }
 

@@ -46,6 +46,9 @@ endif
 -include ../makefile.defs
 
 # Add inputs and outputs from these tool invocations to the build variables 
+SECONDARY_FLASH += \
+bms_bootloader_k144.bin \
+
 SECONDARY_SIZE += \
 bms_bootloader_k144.siz \
 
@@ -61,6 +64,12 @@ bms_bootloader_k144.elf: $(OBJS) C:/Users/austin_rideriver/bootloader_new_bms_k1
 	@echo 'Finished building target: $@'
 	@echo ' '
 
+bms_bootloader_k144.bin: bms_bootloader_k144.elf
+	@echo 'Invoking: Standard S32DS Create Flash Image'
+	arm-none-eabi-objcopy -O binary bms_bootloader_k144.elf  "bms_bootloader_k144.bin"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 bms_bootloader_k144.siz: bms_bootloader_k144.elf
 	@echo 'Invoking: Standard S32DS Print Size'
 	arm-none-eabi-size --format=berkeley bms_bootloader_k144.elf
@@ -72,7 +81,7 @@ clean:
 	-$(RM) ./*
 	-@echo ' '
 
-secondary-outputs: $(SECONDARY_SIZE)
+secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_SIZE)
 
 .PHONY: all clean dependents
 

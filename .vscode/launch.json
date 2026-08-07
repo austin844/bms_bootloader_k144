@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Primary Application",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "device": "S32K144",
+      "interface": "swd",
+      "runToMain": true,
+      "executable": "C:/Users/austin_rideriver/bootloader_new_bms_k144/bms_bootloader_k144/Debug_FLASH/bms_bootloader_k144.elf",
+      "cwd": "${workspaceFolder}",
+      // "preLaunchTask": "Flash S32K144 Firmware",
+      "svdFile": "${workspaceFolder}/SVD/S32K144.svd",
+      "postRestartCommands": [
+        "monitor reset halt"
+      ]
+    }
+  ]
+}

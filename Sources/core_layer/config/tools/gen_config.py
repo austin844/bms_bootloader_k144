@@ -677,7 +677,7 @@ def parse_nxp(vendor_dir):
         if m_clk:
             row["clk"] = m_clk.group(1)
         wd_rows.append(row)
-    for f in sorted(vendor_dir.glob("wdg_pal_1*.c")):
+    for f in sorted(vendor_dir.glob("wdg_pal1*.c")):
         text = read(f)
         if "WDG_INST_TYPE_WDOG" in text:
             m_to = re.search(r'\.timeoutValue\s*=\s*(\d+)', text)

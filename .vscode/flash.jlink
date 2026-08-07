@@ -1,0 +1,6 @@
+// /flash.jlink
+r
+loadbin C:/Users/austin_rideriver/bootloader_new_bms_k144/bms_bootloader_k144/Debug_FLASH/bms_bootloader_k144.bin 0x00000000
+r
+g
+exit
