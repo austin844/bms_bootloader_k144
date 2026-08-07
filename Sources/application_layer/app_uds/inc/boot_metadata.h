@@ -68,9 +68,9 @@ typedef struct {
     U8  update_pending;         /* set after 0x37, cleared upon boot success  */
     U8  sec_access_fail_count;  /* 0x27 attempt counter (survives ECUReset)   */
     U8  boot_fail_count;        /* incremented before jump, app clears it     */
+    U8  reserved[4];            /* PADDING: Forces struct size to 32 bytes    */
     U32 crc_self;               /* CRC-32 of all fields above this one        */
 } boot_metadata_t;
-
 /* Public Variable Declaration ------------------------------------------------------------------------------------------------*/
 
 /* Public Function Declarations -----------------------------------------------------------------------------------------------*/
