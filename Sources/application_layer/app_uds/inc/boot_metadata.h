@@ -34,8 +34,8 @@
 #define ETX_APP_BANK_SIZE          (0x0004B000UL)   /* 300 KB for the single app slot */
 #define ETX_APP_BANK_A_END         (ETX_APP_BASE_ADDRESS + ETX_APP_BANK_SIZE) /* 0x0005B000 */
 
-/* Boot metadata block: Placed at the very end of the 512 KB flash */
-#define ETX_METADATA_CF_ADDR       (0x0007F000UL)   /* Fixed at 508 KB mark */
+/* Boot metadata block: Moved back by one 4 KB sector */
+#define ETX_METADATA_CF_ADDR       (0x0007E000UL)   /* Fixed at 504 KB mark */
 #define ETX_METADATA_CF_SIZE       (0x00001000UL)   /* One 4 KB sector */
 
 /* App-data region: Mapped to FlexNVM Data Flash. */
@@ -68,7 +68,8 @@ typedef struct {
     U8  update_pending;         /* set after 0x37, cleared upon boot success  */
     U8  sec_access_fail_count;  /* 0x27 attempt counter (survives ECUReset)   */
     U8  boot_fail_count;        /* incremented before jump, app clears it     */
-    U8  reserved[4];            /* PADDING: Forces struct size to 32 bytes    */
+    U8 stay_in_bootloader;
+    U8  reserved[3];            /* PADDING: Forces struct size to 32 bytes    */
     U32 crc_self;               /* CRC-32 of all fields above this one        */
 } boot_metadata_t;
 /* Public Variable Declaration ------------------------------------------------------------------------------------------------*/

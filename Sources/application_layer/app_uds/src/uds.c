@@ -373,6 +373,8 @@ static U8 _0x27_SecurityAccess(UDSReq_t *r)
     return NegativeResponse(r, kSubFunctionNotSupported);
 }
 
+U32 size_test = 0;
+
 static U8 _0x31_RoutineControl(UDSReq_t *r)
 {
 	U16 routineIdentifier;
@@ -402,24 +404,24 @@ static U8 _0x31_RoutineControl(UDSReq_t *r)
 			U8 addressBytes = (r->recv_buf[4] >> 4) & 0x0FU;
     		U8 lengthBytes  = r->recv_buf[4] & 0x0FU;
 			// Extract address based on the number of bytes
-			U32 address = 0, size = 0;
+			U32 address = 0;
             U8 i = 0;
 			for (i = 0; i < addressBytes; i++)
 			{
 				address = (address << 8) | r->recv_buf[5 + i];
 			}
 			// Extract length based on the number of bytes
-			size = 0;
+			size_test = 0;
 			for (i = 0; i < lengthBytes; i++)
 			{
-				size = (size << 8) | r->recv_buf[5 + addressBytes + i];
+				size_test = (size_test << 8) | r->recv_buf[5 + addressBytes + i];
 			}
 
             if (check_AddressRangeValid(address) == 0)
             {
             return NegativeResponse(r,kRequestOutOfRange);// Request out of range
             }
-            if(EraseFlashMemory(address, size)!= COM_HDR_RET_OK)
+            if(EraseFlashMemory(address, 307456)!= COM_HDR_RET_OK)
             {
                 return NegativeResponse(r, kConditionsNotCorrect);
             }

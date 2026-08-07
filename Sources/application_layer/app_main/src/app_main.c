@@ -126,6 +126,13 @@ void app_main_v(void)
         stay_in_bl = true;
     }
 
+    if (1 == (m.stay_in_bootloader))
+    {
+        stay_in_bl = true;
+        m.stay_in_bootloader = 0;
+        boot_metadata_write(&m);
+    }
+
     // /* First-time boot: no firmware written to either bank yet */
     // if (!stay_in_bl && (m.fw_size[0] == 0U) && (m.fw_size[1] == 0U))
     // {

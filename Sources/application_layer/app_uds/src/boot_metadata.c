@@ -118,6 +118,7 @@ void boot_metadata_init(void)
         memset(&m, 0, sizeof(m));
         m.magic          = BOOT_METADATA_MAGIC;
         m.boot_reason    = ETX_NORMAL_BOOT;
+        m.stay_in_bootloader = 0;
 
         /*
          * Default secret: must be provisioned per unit in production via a
